@@ -1,18 +1,67 @@
 
 'use strict';
+
+function showEntrance(){
+ document.body.classList.add('at-entry');document.body.classList.remove('sideopen');if(dlg.open)dlg.close();
+ $('#side').replaceChildren();$('#top').replaceChildren();
+ const login=`<button class="backlink" data-act="choose">${icon('ChevronLeft')} กลับไปเลือกผู้ใช้งาน</button><h2>เข้าสู่ระบบเจ้าหน้าที่</h2><form id="loginform"><label for="username">ชื่อผู้ใช้</label><input id="username" class="field" name="username" required autocomplete="username" autocapitalize="none" spellcheck="false"><label for="password">รหัสผ่าน</label><input id="password" class="field" name="password" type="password" required autocomplete="current-password"><p id="autherror" role="alert"></p><button class="btn primary" type="submit">เข้าสู่ระบบ ${icon('ArrowRight')}</button></form>`;
+ const choice=(act,ic,title,sub)=>`<button class="rolechoice" data-act="${act}"><span class="choiceicon">${icon(ic)}</span><span><b>${title}</b><small>${sub}</small></span>${icon('ChevronRight')}</button>`;
+ main.innerHTML=`<section class="entrybox"><div class="entryphoto"><div class="entrybrand"><img src="assets/nsdf-logo.webp" alt="ตรากองทุนพัฒนาการกีฬาแห่งชาติ"><span>กองทุนพัฒนาการกีฬาแห่งชาติ</span></div><div class="entrycaption"><span>ปีงบประมาณ 2570</span><h1>ระบบติดตาม<br>ความคืบหน้าแผนงาน</h1></div></div><div class="entrychoices">${loginOpen?login:`<h2>เลือกการเข้าใช้งาน</h2>${choice('guest','LayoutDashboard','สำหรับบุคคลทั่วไป','ดูงบประมาณและความคืบหน้าแผนงานที่ 1–8')}${choice('staff','Users','สำหรับเจ้าหน้าที่','บันทึกรอบรายงานและติดตามงานจัดซื้อจัดจ้าง')}`}</div></section>`;
+ document.title='เลือกการเข้าใช้งาน | NSDF 2570';
+}
+function leave(){
+ sessionVersion++;readToken++;if(staff?.templateURL)URL.revokeObjectURL(staff.templateURL);
+ staff=null;role=null;loginOpen=false;base=publicBase;setEvents([]);data=structuredClone(base);
+ pending=null;previewFile=null;importPlan=1;planId=1;chartKey='allocated';ready=false;failed='';mode='overview';
+ history.replaceState(null,'',location.href.split('#')[0]);dlg.replaceChildren();$('#toast').textContent='';showEntrance();
+}
+async function enter(kind,session){
+ sessionVersion++;role=kind;staff=session??null;ready=false;
+ base=staff?NSDFAccess.staffBase(publicBase,staff.content):publicBase;
+ if(staff){
+   const blob=new Blob([NSDFAccess.bytes(staff.content.template)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+   staff.templateURL=URL.createObjectURL(blob);
+ }
+ setEvents([]);await start();
+}
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='loginform')return;
+ e.preventDefault();const form=e.target,button=form.querySelector('[type=submit]'),msg=form.querySelector('#autherror');
+ const version=sessionVersion;button.disabled=true;msg.textContent='';
+ try{
+  const session=await NSDFAccess.signIn(form.username.value,form.password.value);
+  if(version!==sessionVersion||!form.isConnected)return;
+  form.password.value='';await enter('staff',session);
+ }catch{if(form.isConnected){msg.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';form.password.value='';form.password.focus();}}
+ finally{button.disabled=false;}
+});
+async function localLog(session,migrate=false){
+ const raw=JSON.parse(localStorage.getItem(storageKey)||'[]');
+ if(!Array.isArray(raw))throw Error('invalid history');
+ if(!session)return raw.filter(e=>publicBase.plans.some(p=>p.id===e.planId));
+ if(migrate && raw.some(e=>e.planId===9)){
+   for(let i=0;i<raw.length;i++)if(raw[i].planId===9)raw[i]=await NSDFAccess.seal(session.key,raw[i]);
+   localStorage.setItem(storageKey,JSON.stringify(raw));
+ }
+ return Promise.all(raw.map(e=>e.sealed?NSDFAccess.open(session.key,e):e));
+}
+function authHeaders(){return isStaff()?{Authorization:'Bearer '+staff.token}:{};}
+
 function exportDialog(){
- modal('ส่งออกรายงานความคืบหน้า',`<p>รายงาน Excel ณ ${dateTH(asOf,true)} พร้อมรายละเอียดและแถวต้นทาง</p><label class="formlabel">ขอบเขตรายงาน<select class="field" id="exportplan"><option value="all">ภาพรวมทั้ง 6 แผนงาน</option>${data.plans.map(p=>`<option value="${p.id}" ${mode==='plan'&&planId===p.id?'selected':''}>แผน ${p.id} · ${h(p.shortName)}</option>`).join('')}</select></label><div class="modalfoot">${btn('ยกเลิก','X','close')}${btn('ดาวน์โหลด Excel','FileDown','download','primary')}</div>`);
+ if(!isStaff())return;
+ modal('ส่งออกรายงานความคืบหน้า',`<p>รายงาน Excel ณ ${dateTH(asOf,true)} พร้อมรายละเอียดและแถวต้นทาง</p><label class="formlabel">ขอบเขตรายงาน<select class="field" id="exportplan"><option value="all">ภาพรวมแผนงานที่ 1–8</option>${(mode==='plan'&&planId===9?data.plans:support(data)).map(p=>`<option value="${p.id}" ${mode==='plan'&&planId===p.id?'selected':''}>แผน ${p.id} · ${h(p.shortName)}</option>`).join('')}</select></label><div class="modalfoot">${btn('ยกเลิก','X','close')}${btn('ดาวน์โหลด Excel','FileDown','download','primary')}</div>`);
 }
 async function downloadReport(id){
- const selected=id==='all'?data.plans:data.plans.filter(p=>p.id===Number(id)), prior=dates[dates.indexOf(asOf)+1],old=prior?snapshot(base,events,prior):null;
- const summary=[['รอบรายงาน','แผนงาน','ชื่อแผนงาน','กรอบเดิม (บาท)','กรอบหลังปรับ (บาท)','จัดสรรสะสม (บาท)','จัดสรรต่อกรอบ (%)','MOU ลงนาม','MOU อยู่ระหว่างดำเนินการ','MOU พร้อมลงนาม','MOU รวมตามทะเบียน','เบิกจ่ายสะสม (บาท)','วันที่ปรับปรุงแผน','เปลี่ยนแปลงจัดสรรจากรอบก่อน (บาท)','เปลี่ยนแปลง MOU ลงนาม (ฉบับ)','แถวสรุปต้นทาง']];
- const sheets=[{name:'สรุปรายสัปดาห์',rows:summary,widths:[22,12,85,24,24,24,22,18,26,21,23,25,22,40,35,22]}];
+ if(!isStaff())return;
+ const selected=id==='all'?support(data):data.plans.filter(p=>p.id===Number(id)), prior=dates[dates.indexOf(asOf)+1],old=prior?snapshot(base,events,prior):null;
+ const summary=[['รอบรายงาน','แผนงาน','ชื่อแผนงาน','กรอบเดิม (บาท)','กรอบวงเงิน (บาท)','คณะกรรมการอนุมัติแล้ว (บาท)','จัดสรรต่อกรอบ (%)','MOU ลงนาม','MOU อยู่ระหว่างดำเนินการ','MOU พร้อมลงนาม','MOU รวมตามทะเบียน','เบิกจ่ายแล้ว (บาท)','เบิกจ่ายต่อยอดอนุมัติ (%)','วันที่ปรับปรุงแผน','เปลี่ยนแปลงจัดสรรจากรอบก่อน (บาท)','เปลี่ยนแปลง MOU ลงนาม (ฉบับ)','แถวสรุปต้นทาง']];
+ const sheets=[{name:'สรุปรายสัปดาห์',rows:summary,widths:[22,12,85,24,24,24,22,18,26,21,23,25,30,22,40,35,22]}];
  for(const p of selected){
   const priorPlan=old?.plans.find(x=>x.id===p.id);
-  summary.push([dateTH(asOf),p.id,p.name,p.originalBudget,p.budget,p.allocated,pct(p.allocated,p.budget),p.mouSigned,p.mouPending,p.mouReady,p.mouTotal,p.paid,dateTH(p.reportDate||base.asOf),old?p.allocated-priorPlan.allocated:null,old&&p.id!==9?p.mouSigned-priorPlan.mouSigned:null,p.sourceRow]);
+  summary.push([dateTH(asOf),p.id,p.name,p.originalBudget,p.budget,p.allocated,pct(p.allocated,p.budget),p.mouSigned,p.mouPending,p.mouReady,p.mouTotal,p.paid,pct(p.paid,p.allocated),dateTH(p.reportDate||base.asOf),old?p.allocated-priorPlan.allocated:null,old&&p.mouSigned!=null&&priorPlan.mouSigned!=null?p.mouSigned-priorPlan.mouSigned:null,p.sourceRow]);
   const proc=p.id===9,source=base.sources[proc?'procurement':'plans'],cols=columns(p.id),fields=['กรอบรายการ (บาท)',...cols.slice(2).map(c=>c[0])];
-  const detail=items(data,p.id).map(r=>[r.id,r.name,r.budget,...cols.slice(2).map(c=>c[1]==='contractDate'?r.contractDate||r.contractDateRaw:r[c[1]]),dateTH(r.reportDate||base.asOf),source.sheet,r.sourceRow,r.updatedFrom||source.file]);
-  sheets.push({name:proc?'จัดซื้อจัดจ้างแผน 9':'รายการแผน '+p.id,rows:[['รหัสรายการ','รายการ',...fields,'ข้อมูล ณ วันที่','ชีตต้นทาง','แถวต้นทาง','แหล่งอัปเดตล่าสุด'],...detail],widths:[16,85,23,...cols.slice(2).map(c=>['officer','status','note','evidence'].includes(c[1])?65:26),20,21,14,40]});
+  const detail=items(data,p.id).map(r=>[r.id,r.name,r.budget,...cols.slice(2).map(c=>c[1]==='contractDate'?r.contractDate||r.contractDateRaw:r[c[1]]),pct(r.paid,r.allocated),dateTH(r.reportDate||base.asOf),source.sheet,r.sourceRow,r.updatedFrom||source.file]);
+  sheets.push({name:proc?'จัดซื้อจัดจ้างแผน 9':'รายการแผน '+p.id,rows:[['รหัสรายการ','รายการ',...fields,'เบิกจ่ายต่อยอดอนุมัติ (%)','ข้อมูล ณ วันที่','ชีตต้นทาง','แถวต้นทาง','แหล่งอัปเดตล่าสุด'],...detail],widths:[16,85,23,...cols.slice(2).map(c=>['officer','status','note','evidence'].includes(c[1])?65:26),30,20,21,14,40]});
   if(proc){
    sheets.push({name:'สรุปจัดซื้อจัดจ้าง',rows:[['ตัวชี้วัด','ค่า','หน่วย'],['กรอบแผนบริหาร',p.budget,'บาท'],['วงเงินในทะเบียน',sum(data.procurement,'budget'),'บาท'],['อนุมัติจัดซื้อจัดจ้าง',sum(data.procurement,'allocated'),'บาท'],['จำนวนโครงการ',data.procurement.length,'โครงการ'],['ลงนามสัญญาสะสม',signed(data),'โครงการ'],...stages.map(s=>[s,data.procurement.filter(r=>r.stage===s).length,'โครงการ'])],widths:[45,26,16]});
    sheets.push({name:'ทะเบียนรายจ่าย ตค 69',rows:[['วันที่ตัดบัญชี','จำนวนรายการ','ก่อนหัก (บาท)','สุทธิ (บาท)','แถวต้นทาง'],...base.ledger.rows.map(r=>[r.date?dateTH(r.date):'ไม่ระบุวันที่',r.count,r.gross,r.net,r.sourceRows.join(', ')])],widths:[26,18,26,26,30]});
@@ -24,7 +73,7 @@ async function downloadReport(id){
   ev.rows.forEach(r=>Object.entries(r.values).forEach(([k,v])=>log.push([dateTH(ev.date),ev.planId,r.id,labels[k],v,ev.file])));
  }
  if(log.length>1)sheets.push({name:'ประวัติการอัปเดต',rows:log,widths:[23,12,20,45,64,55]});
- const refs=[['แหล่งอ้างอิง','ชีตหรือหัวข้อ','รายละเอียด'],...Object.values(base.sources).map(s=>[s.file,s.sheet,s.columns+' · '+s.note]),['รอบเปรียบเทียบ',prior?dateTH(prior):'ยังไม่มีรอบก่อนหน้า','ช่องว่างในข้อมูลตัวเลขหมายถึงยังไม่มีข้อมูลรายงาน'],...selected.flatMap(p=>p.notes.map(n=>['ข้อสังเกตจากข้อมูลตั้งต้น','แผน '+p.id,n]))];
+ const refs=[['แหล่งอ้างอิง','ชีตหรือหัวข้อ','รายละเอียด'],...Object.values(selected.some(p=>p.id===9)?base.sources:publicBase.sources).map(s=>[s.file,s.sheet,s.columns+' · '+s.note]),['รอบเปรียบเทียบ',prior?dateTH(prior):'ยังไม่มีรอบก่อนหน้า','ช่องว่างในข้อมูลตัวเลขหมายถึงยังไม่มีข้อมูลรายงาน'],...selected.flatMap(p=>p.notes.map(n=>['ข้อสังเกตจากข้อมูลตั้งต้น','แผน '+p.id,n]))];
  sheets.push({name:'แหล่งข้อมูล',rows:refs,widths:[55,34,125]});
  await ExcelIO.report(sheets,`NSDF-2570-${id==='all'?'ภาพรวม':'แผน-'+id}-${asOf}.xlsx`);
 }
@@ -38,6 +87,7 @@ function patchTable(ev,before){
 }
 let readToken=0,preparedRevision=0;
 async function previewImport(file){
+ if(!isStaff())return;
  const token=++readToken,zone=$('#preview');pending=null;previewFile=file;
  if(!file||!zone)return;
  zone.innerHTML='<p class="hint">กำลังตรวจไฟล์ Excel…</p>';
@@ -51,36 +101,45 @@ async function previewImport(file){
  }catch(err){if(token===readToken&&mode==='import')zone.innerHTML=`<p class="errorbox" role="alert">${h(err.message)}</p>`;}
 }
 async function readEvents(){
- if(browserStorage)return JSON.parse(localStorage.getItem(storageKey)||'[]');
- const response=await fetch('./api/reports',{cache:'no-store'});
+ if(browserStorage){const session=staff;const read=()=>localLog(session,!!session);return navigator.locks && session?navigator.locks.request(storageKey,read):read();}
+ const response=await fetch('./api/reports',{cache:'no-store',headers:authHeaders()});
  if(!response.ok)throw Error('เปิดประวัติการอัปเดตไม่สำเร็จ');
  const result=await response.json();
  if(!Array.isArray(result.events))throw Error('รูปแบบประวัติไม่ถูกต้อง');return result.events;
 }
 async function commitImport(el){
- if(!pending||busy)return;
+ if(!isStaff()||!pending||busy)return;
+ const version=sessionVersion,session=staff;
  busy=true;el.disabled=true;
  try{
   const ev=pending;
   if(browserStorage){
-   const save=async()=>{const latest=await readEvents();if(latest.length!==preparedRevision)throw Error('ข้อมูลเปลี่ยนแล้ว กรุณาโหลดข้อมูลใหม่ก่อนตรวจไฟล์อีกครั้ง');const clean=NSDF.validate(base,latest,ev);localStorage.setItem(storageKey,JSON.stringify([...latest,clean]));};
+   const save=async()=>{if(session!==staff)return;const latest=await localLog(session,true);if(latest.length!==preparedRevision)throw Error('ข้อมูลเปลี่ยนแล้ว กรุณาโหลดข้อมูลใหม่ก่อนตรวจไฟล์อีกครั้ง');const clean=NSDF.validate(base,latest,ev);const entry=clean.planId===9?await NSDFAccess.seal(session.key,clean):clean;if(session!==staff)return;const raw=JSON.parse(localStorage.getItem(storageKey)||'[]');raw.push(entry);localStorage.setItem(storageKey,JSON.stringify(raw));};
    if(navigator.locks)await navigator.locks.request(storageKey,save);else await save();
   }else{
-   const response=await fetch('./api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:preparedRevision,event:ev})});
+   const response=await fetch('./api/reports',{method:'POST',headers:{...authHeaders(),'Content-Type':'application/json'},body:JSON.stringify({revision:preparedRevision,event:ev})});
    const result=await response.json();
    if(!response.ok)throw Error(result.error||'บันทึกไม่สำเร็จ');
   }
-  setEvents(await readEvents(),ev.date);pending=null;previewFile=null;
+  const updated=await readEvents();if(version!==sessionVersion)return;setEvents(updated,ev.date);pending=null;previewFile=null;
   location.hash='weekly';toast('บันทึกความคืบหน้ารอบ '+dateTH(ev.date)+' แล้ว');
- }catch(err){modal('ยังไม่ยืนยันการบันทึก',`<p>${h(err.message)}</p><div class="modalfoot">${btn('โหลดรอบรายงานใหม่','RotateCw','reload','primary')}</div>`);}
+ }catch(err){if(version!==sessionVersion)return;modal('ยังไม่ยืนยันการบันทึก',`<p>${h(err.message)}</p><div class="modalfoot">${btn('โหลดรอบรายงานใหม่','RotateCw','reload','primary')}</div>`);}
  finally{busy=false;el.disabled=false;}
 }
 async function start(){
- failed='';try{setEvents(await readEvents());ready=true;}catch(e){ready=false;failed='เปิดประวัติรายสัปดาห์ไม่สำเร็จ กำลังแสดงเฉพาะข้อมูลตั้งต้น';}route();
+ if(!role){route();return;}
+ const version=sessionVersion;failed='';try{const list=await readEvents();if(version!==sessionVersion)return;setEvents(list);ready=true;}catch(e){if(version!==sessionVersion)return;ready=false;failed='เปิดประวัติรายสัปดาห์ไม่สำเร็จ กำลังแสดงเฉพาะข้อมูลตั้งต้น';}route();
 }
 document.addEventListener('click',async e=>{
  const el=e.target.closest('[data-act]');if(!el)return;
  const act=el.dataset.act;
+ if(act==='leave'){leave();return;}
+ if(!role){
+   if(act==='guest')await enter('guest');
+   if(act==='staff'||act==='choose'){loginOpen=act==='staff';showEntrance();$('#username')?.focus();}
+   return;
+ }
+ if(!isStaff()&&['commit','export','download'].includes(act))return;
  if(act==='menu')document.body.classList.toggle('sideopen');
  if(act==='close')dlg.close();
  if(act==='chart'){chartKey=el.dataset.key;render();}
@@ -111,4 +170,3 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classLis
 window.addEventListener('hashchange',()=>{readToken++;route();});
 window.addEventListener('storage',e=>{if(browserStorage&&e.key===storageKey)start();});
 start();
-

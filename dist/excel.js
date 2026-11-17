@@ -42,7 +42,8 @@
     }
     const heads=values(rows[0]), cols=NSDF.columns(plan), mapping={};
     for(const [label,key] of cols){
-      const matches=Object.keys(heads).filter(c=>heads[c].value===label);
+      const matches=Object.keys(heads).filter(c=>heads[c].value===label || (key==='paid' && heads[c].value==='เบิกจ่ายสะสม (บาท)'));
+      if(plan===9 && key==='paid' && matches.length===0)continue; // Earlier procurement templates ended at column K.
       if(matches.length!==1)throw Error('คอลัมน์ไม่ตรงกับเทมเพลตแผน '+plan+' (“'+label+'”)');
       mapping[key]=matches[0];
     }

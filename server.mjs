@@ -8,6 +8,8 @@ import {reportsAPI} from './api.mjs';
 const root=path.dirname(fileURLToPath(import.meta.url)), dist=path.join(root,'dist');
 globalThis.window=globalThis;
 await import('./dist/data.js');
+await import('./dist/access.js');
+await import('./dist/staff-data.js');
 await import('./dist/core.js');
 const state=process.env.NSDF_DATA_DIR||path.join(root,'.local-data');
 mkdirSync(state,{recursive:true});
@@ -28,7 +30,7 @@ const server=createServer(async(req,res)=>{
    const response=await reportsAPI(request,store,globalThis.NSDF_DATA,globalThis.NSDF);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());return;
   }
   const relative=decodeURIComponent(url.pathname).replace(/^\/+/, '')||'index.html';
-  const allowed=/^(?:index\.html|(?:styles\.css|(?:data|core|excel|app|views|actions)\.js)|assets\/(?:[\w.-]+\/)*[\w.-]+|templates\/plan-[1-59]\.xlsx)$/.test(relative) && !relative.includes('..');
+  const allowed=/^(?:index\.html|(?:styles\.css|(?:data|staff-data|access|core|excel|app|views|actions)\.js)|assets\/(?:[\w.-]+\/)*[\w.-]+|templates\/plan-[1-8]\.xlsx)$/.test(relative) && !relative.includes('..');
   const file=path.join(dist,relative);
   if(req.method!=='GET'&&req.method!=='HEAD'||!allowed||!existsSync(file)){res.writeHead(404);res.end();return;}
   res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Cache-Control':'no-cache'});res.end(req.method==='HEAD'?undefined:readFileSync(file));
@@ -58,4 +60,3 @@ server.on('error',async error=>{
  process.exitCode=1;
 });
 server.listen(port,'127.0.0.1',()=>{console.log('NSDF dashboard '+address);openDashboard();});
-

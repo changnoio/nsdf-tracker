@@ -17,6 +17,8 @@ const worker=[
  'const window=globalThis;',
  readFileSync(path.join(dist,'data.js'),'utf8'),
  readFileSync(path.join(dist,'core.js'),'utf8'),
+ readFileSync(path.join(dist,'access.js'),'utf8'),
+ readFileSync(path.join(dist,'staff-data.js'),'utf8'),
  readFileSync(path.join(root,'api.mjs'),'utf8').replace('export async function reportsAPI','async function reportsAPI'),
  'const assets='+JSON.stringify(assets)+';',
  readFileSync(path.join(root,'worker.mjs'),'utf8')
@@ -24,4 +26,3 @@ const worker=[
 mkdirSync(path.join(dist,'server'),{recursive:true});
 writeFileSync(path.join(dist,'server/index.js'),worker);
 console.log('Worker prepared with',Object.keys(assets).length,'assets.');
-

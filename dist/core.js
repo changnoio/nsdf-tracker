@@ -3,8 +3,8 @@
   'use strict';
   const stages = ['เตรียมการ','จัดทำ TOR และราคากลาง','เชิญชวนและพิจารณาข้อเสนอ','รอลงนาม','ลงนามสัญญาแล้ว','บริหารสัญญา','ตรวจรับ','เบิกจ่าย','เสร็จสิ้น'];
   const common = [['รหัสรายการ','id'],['รายการ','name']];
-  const grantColumns = [...common,['จัดสรรสะสม (บาท)','allocated'],['ลงนาม MOU (ฉบับ)','mouSigned'],['MOU อยู่ระหว่างดำเนินการ (ฉบับ)','mouPending'],['MOU พร้อมลงนาม (ฉบับ)','mouReady'],['MOU ทั้งหมด (ฉบับ)','mouTotal'],['เบิกจ่ายสะสม (บาท)','paid'],['ผลงาน (%)','progress'],['ผู้รับผิดชอบ','officer'],['ความคืบหน้าและงานถัดไป','note'],['หลักฐานอ้างอิง','evidence']];
-  const procurementColumns = [...common,['ขั้นตอน','stage'],['สถานะตามรายงาน','status'],['ผู้รับผิดชอบ','officer'],['วงเงินอนุมัติ (บาท)','allocated'],['เลขที่สัญญา','contract'],['วันที่สัญญา','contractDate'],['ผลงาน (%)','progress'],['งานถัดไป','note'],['หลักฐานอ้างอิง','evidence']];
+  const grantColumns = [...common,['จัดสรรสะสม (บาท)','allocated'],['ลงนาม MOU (ฉบับ)','mouSigned'],['MOU อยู่ระหว่างดำเนินการ (ฉบับ)','mouPending'],['MOU พร้อมลงนาม (ฉบับ)','mouReady'],['MOU ทั้งหมด (ฉบับ)','mouTotal'],['เบิกจ่ายแล้ว (บาท)','paid'],['ผลงาน (%)','progress'],['ผู้รับผิดชอบ','officer'],['ความคืบหน้าและงานถัดไป','note'],['หลักฐานอ้างอิง','evidence']];
+  const procurementColumns = [...common,['ขั้นตอน','stage'],['สถานะตามรายงาน','status'],['ผู้รับผิดชอบ','officer'],['วงเงินอนุมัติ (บาท)','allocated'],['เลขที่สัญญา','contract'],['วันที่สัญญา','contractDate'],['ผลงาน (%)','progress'],['งานถัดไป','note'],['หลักฐานอ้างอิง','evidence'],['เบิกจ่ายแล้ว (บาท)','paid']];
   const aggregate = ['allocated','mouSigned','mouPending','mouReady','mouTotal','paid'];
   const numeric = [...aggregate,'progress'];
   const columns = id => id === 9 ? procurementColumns : grantColumns;
@@ -45,7 +45,7 @@
     return result;
   }
   function validate(base,events,proposal) {
-    if(!proposal || ![1,2,3,4,5,9].includes(proposal.planId)) throw Error('เลือกแผนงานที่ต้องการอัปเดต');
+    if(!proposal || !base.plans.some(plan=>plan.id===proposal.planId)) throw Error('เลือกแผนงานที่ต้องการอัปเดต');
     if(!validDate(proposal.date)||proposal.date<base.asOf||proposal.date>localDate()) throw Error('วันที่รายงานต้องอยู่ระหว่างวันที่ฐานข้อมูลถึงวันนี้');
     const latest=events.at(-1)?.date||base.asOf;
     if(proposal.date<latest) throw Error('รอบรายงานต้องตรงกับหรืออยู่หลังรอบล่าสุด เพื่อรักษาลำดับข้อมูลสะสม');

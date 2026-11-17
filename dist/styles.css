@@ -3,3 +3,43 @@
 @keyframes grow{from{transform:scaleX(.02)}to{transform:scaleX(1)}}@keyframes appear{from{opacity:.35;transform:translateY(3px)}to{opacity:1;transform:none}}@media(min-width:1640px){:root{--side:257px}body{font-size:17px}.hero{min-height:245px}.nav{font-size:16px}.kpi{padding:21px}.khead{font-size:16px!important}.chart{gap:16px}.barline{font-size:15px}.donutbody{padding-top:30px}.box{padding:24px}.tablebox{padding:0}}@media(max-width:1170px){:root{--side:206px}.brand{padding-left:16px;gap:8px}.nav{padding-left:10px}.sidebody{padding-inline:10px}main{padding:20px}.box{padding:17px}.tablebox{padding:0}.kpis{gap:9px}.kpi{padding:13px}.analytic{gap:10px;grid-template-columns:1.42fr 1fr}.khead{font-size:13px!important}.donutbody{gap:10px}.cardhead h2,.box h2{font-size:19px}.tabbar button{padding:4px 6px}.hero{min-height:188px}.barline{grid-template-columns:56px 1fr 58px}.donutlegend b{font-size:20px}}@media(max-width:940px){:root{--side:0px}#side{width:245px;transform:translateX(-102%);transition:transform .2s}.sideopen #side{transform:none}.sideopen #shade{position:fixed;inset:0;background:#18182865;z-index:19}.mobileMenu{display:grid}#top{min-height:61px;padding:10px 18px}.hero:before{background-position:65% center}.analytic{grid-template-columns:1.36fr 1fr}.kpis{gap:9px}.crumb{flex:1}.hero{min-height:192px}.box{padding:16px}.tablebox{padding:0}}@media(max-width:700px){body{font-size:15px}main{padding:13px 12px 35px}#top{padding:9px 12px;gap:8px}.crumb>span,.crumb>svg,.crumb>strong{display:none}.mobileTitle{display:block;color:var(--navy)}.actions{gap:5px}.datewrap,.actions>.btn{font-size:12px;padding:8px}.hero{padding:22px 18px;min-height:187px;border-radius:12px}.hero:before{background-position:66% 50%}.hero:after{background:linear-gradient(90deg,#1d1d43ed,#23234bb5 54%,#22223d38)}.hero h1{font-size:32px}.hero p{font-size:13px;max-width:230px}.eyebrow{font-size:12px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:13px 12px}.moneynum strong{font-size:28px}.kfoot{font-size:11px}.analytic,.grid2{grid-template-columns:1fr}.donutbody{padding:16px;gap:28px}.donut{width:125px}.pagetitle{align-items:flex-start;flex-direction:column}.sourcecard b{font-size:15px}.t th,.t td{padding:9px 10px}.sectionhead{margin-top:16px}.sectionhead h2{font-size:19px}.sectionhead small{font-size:11px}.modalbody{padding:15px}.tablebox>.cardhead{padding:14px}.datafacts{grid-template-columns:1fr 1fr}.chart{gap:13px}.weekline{flex-wrap:wrap}.historyrow{flex-wrap:wrap}.p9link .cardhead{align-items:flex-start;flex-direction:column}.stagefilter{font-size:13px}.viewall{font-size:12px}.unit{font-size:12px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 .hero:before{background-size:auto 137%;background-position:right 44%}.screen{animation:none}.brand small{white-space:nowrap;font-size:11px}.brand{min-height:82px}@media(max-width:700px){.hero:before{background-size:auto 111%;background-position:83% center}}
 .hero:before{left:auto;aspect-ratio:4.11/1;max-width:100%;width:auto;mask-image:linear-gradient(to right,transparent,#000 32%)}@media(max-width:700px){.hero:before{inset:0;aspect-ratio:auto;mask-image:none}}
+
+/* Role selection and large-type dashboard */
+body{font-size:18px}
+.at-entry #side,.at-entry #top,.at-entry #shade{display:none}
+.at-entry #workspace{margin:0}
+.at-entry{background:radial-gradient(ellipse at 15% 10%,#e9e6f6,transparent 58%),#f5f5f9}
+.at-entry main{min-height:100svh;display:grid;place-items:center;padding:clamp(16px,4vw,72px)}
+.entrybox{width:min(1160px,100%);display:grid;grid-template-columns:1.05fr 1fr;min-height:570px;border-radius:26px;background:white;overflow:hidden;box-shadow:0 24px 80px #21244720;border:1px solid #dddde9}
+.entryphoto{display:flex;flex-direction:column;justify-content:space-between;gap:48px;padding:clamp(26px,3.4vw,52px);color:white;background:linear-gradient(180deg,#29294ee6 0%,#35315b35 40%,#191635ed 100%),url('assets/stadium.webp') 68% center/cover}
+.entrybrand{display:flex;align-items:center;gap:14px;font-weight:700;font-size:clamp(17px,1.6vw,22px)}
+.entrybrand img{width:64px;height:66px;object-fit:contain;background:white;padding:8px;border-radius:14px}
+.entrycaption>span{display:block;font-size:19px;color:#f5dfa8;margin-bottom:12px}
+.entrycaption h1{font-size:clamp(34px,3.7vw,57px);line-height:1.28}
+.entrychoices{align-self:center;padding:clamp(22px,3.7vw,58px)}
+.entrychoices h2{font-size:clamp(26px,2.5vw,36px);margin:0 0 22px;color:var(--navy)}
+.rolechoice{display:flex;align-items:center;gap:15px;width:100%;text-align:left;border:1px solid #dcdcea;background:#faf9fd;border-radius:16px;padding:19px 16px;margin:12px 0;transition:transform .2s,background .2s}
+.rolechoice:hover{transform:translateY(-2px);border-color:#8b87b3;background:#f0edf8}
+.rolechoice b,.rolechoice small{display:block}.rolechoice b{font-size:22px;color:var(--navy)}.rolechoice small{font-size:16px;color:#595c70}.rolechoice>.ico{margin-left:auto}
+.choiceicon{display:grid;place-items:center;flex:none;width:47px;height:47px;border-radius:13px;color:var(--indigo);background:#e8e5f5}.rolechoice[data-act=staff] .choiceicon{color:#825d16;background:#f6ebd0}
+.backlink{display:flex;align-items:center;gap:4px;background:none;border:0;padding:0;margin-bottom:20px;color:var(--indigo);font-size:16px}
+#loginform{display:grid;gap:7px}#loginform label:not(:first-child){margin-top:8px}#loginform .field{width:100%;font-size:18px;padding:10px 14px}#loginform .btn{justify-content:center;font-size:18px}#autherror{color:#993046;font-size:16px;min-height:1.35em}
+.nav,.nav .smallplan,.btn,.tabbar button,.detailname button,.search input,.field{font-size:17px}
+.navlabel,.nav .pid,.legend,.sectionhead small,.barlabel,.chartnote,.charttip,.kfoot,.fact small,.tinyref,.tdsmall,.pages,.trackerfooter,.weekline p,.historyrow .meta,.detailname small{font-size:15px}
+.sub,.hero p,.datewrap,.fact strong,.stagefilter,.sourcecard p,.baramount,.khead,.t td,.t th{font-size:17px}
+.khead{font-size:17px!important}.kvalue{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap}.kvalue .moneynum{min-width:0}.kpie{width:38px;aspect-ratio:1;flex-shrink:0;border-radius:50%;background:conic-gradient(var(--tone,var(--indigo)) var(--portion),#e6e6ed 0);border:1px solid #0000000c}
+.barline{grid-template-columns:75px minmax(24px,1fr) minmax(68px,auto) minmax(62px,auto);gap:9px}.barrate{text-align:right;font-variant-numeric:tabular-nums;font-size:16px;color:var(--navy);font-weight:700}
+.cardhead h2,.box h2,.sectionhead h2{font-size:clamp(22px,1.7vw,28px)}
+.summarytable{min-width:960px}.summarytable .rowtitle{min-width:200px}.sectionhead{gap:8px}.kfoot b{font-weight:700}
+@media(min-width:941px){:root{--side:260px}.sidebody{padding-top:13px}}
+@media(min-width:701px) and (max-width:1340px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1040px){.analytic{grid-template-columns:1fr}}
+@media(max-width:760px){.entrybox{grid-template-columns:1fr;min-height:initial;max-width:540px}.entryphoto{gap:46px;padding:24px;background-position:center,66% 45%}.entrybrand img{width:45px;height:48px}.entrycaption h1{font-size:34px}.entrycaption h1 br{display:none}.entrycaption>span{font-size:16px;margin-bottom:6px}.entrychoices{padding:22px}.entrychoices h2{margin-bottom:12px}.rolechoice{padding:15px 12px}}
+@media(max-width:700px){.crumb{display:none}.actions{flex:1;justify-content:flex-end;flex-wrap:wrap}.datewrap,.actions>.btn{font-size:14px;padding:7px}.kfoot{font-size:14px}.khead{font-size:16px!important}.kvalue .moneynum strong{font-size:28px}.kpie{width:28px}.barline{grid-template-columns:68px minmax(18px,1fr) 66px 55px;gap:5px}.baramount,.barrate,.barlabel{font-size:15px}.sectionhead{align-items:baseline;flex-wrap:wrap}.t td,.t th{font-size:16px}}
+@media(max-width:380px){.entrychoices{padding:18px}.rolechoice{gap:8px}.choiceicon{width:35px;height:38px}.kpis{grid-template-columns:1fr}}
+@media(max-width:520px){
+ .kpis{grid-template-columns:1fr}.kpi{padding:16px 18px}.kvalue{flex-wrap:nowrap}.kvalue .moneynum strong{font-size:34px}.kpie{width:40px}.kfoot{font-size:15px}
+ .entrycaption h1 br{display:block}.hero p{max-width:100%;font-size:15px}.entrycaption h1{font-size:32px}
+ .analytic .cardhead{flex-wrap:wrap}
+}
+#toast:empty{display:none}
