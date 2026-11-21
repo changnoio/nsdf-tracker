@@ -8,6 +8,12 @@
   const aggregate = ['allocated','mouSigned','mouPending','mouReady','mouTotal','paid'];
   const numeric = [...aggregate,'progress'];
   const columns = id => id === 9 ? procurementColumns : grantColumns;
+  function authorName(value) {
+    if(typeof value!=='string')throw Error('กรุณากรอกชื่อผู้บันทึกข้อมูล');
+    const name=value.trim().replace(/\s+/g,' ');
+    if(name.length<2||name.length>120||/[\x00-\x1f\x7f]/.test(name))throw Error('กรุณากรอกชื่อผู้บันทึก 2–120 ตัวอักษร');
+    return name;
+  }
   function validDate(value) {
     return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(Date.parse(value)) && new Date(value+'T12:00:00Z').toISOString().slice(0,10) === value;
   }
@@ -34,9 +40,15 @@
       }
       row.reportDate=event.date;
       row.updatedFrom=event.file;
+      row.updatedBy=event.updatedBy||null;
+      row.migratedBy=event.migratedBy||null;
+      row.recordedAt=event.recordedAt||null;
     }
     if(summary) Object.assign(plan,summary.values);
     plan.reportDate=event.date;
+    plan.updatedBy=event.updatedBy||null;
+    plan.migratedBy=event.migratedBy||null;
+    plan.recordedAt=event.recordedAt||null;
     return data;
   }
   function snapshot(base,events,date) {
@@ -83,5 +95,5 @@
     if(aggregate.some(k=>after[k]!=null && after[k]<0))throw Error('ยอดรวมหลังอัปเดตติดลบ กรุณาตรวจแถวสรุประดับแผน');
     return {date:proposal.date,planId:proposal.planId,file:proposal.file,rows:changes};
   }
-  scope.NSDF={columns,stages,numeric,validDate,localDate,items,apply,snapshot,validate};
+  scope.NSDF={authorName,columns,stages,numeric,validDate,localDate,items,apply,snapshot,validate};
 })(globalThis);

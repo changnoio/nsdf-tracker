@@ -18,15 +18,20 @@ const support=d=>d.plans.filter(p=>p.id<9);
 const signed=d=>d.procurement.filter(r=>stages.indexOf(r.stage)>=4).length;
 const planLabels={1:'นโยบายและยุทธศาสตร์',2:'กีฬาระดับชาติและนานาชาติ',3:'กีฬาระดับจังหวัด',4:'กีฬาอาชีพ',5:'กีฬามวยไทย',6:'ทุนการศึกษานักกีฬาและเยาวชน',7:'สวัสดิการและการคุ้มครอง',8:'เงินรางวัลและสิทธิประโยชน์',9:'บริหารกองทุน'};
 const titles={overview:'แดชบอร์ดภาพรวม',weekly:'รายงานรายสัปดาห์',import:'นำเข้าและเทมเพลต',sources:'แหล่งข้อมูลและวิธีคำนวณ'};
-const staticSite=document.documentElement.dataset.storage==='browser';
-const browserStorage=location.protocol==='file:'||staticSite;
-const storageKey=staticSite?'nsdf-fy2570-events-v1:'+new URL('.',document.baseURI).pathname:'nsdf-fy2570-events-v1';
+const reportsEndpoint=new URL(document.documentElement.dataset.api||'./api/reports',document.baseURI).href;
+const storageKey='nsdf-fy2570-events-v1:'+new URL('.',document.baseURI).pathname;
+let author='',legacyRecords=[],syncing=false,sharedRevision=0;
 let events=[],dates=[base.asOf],asOf=base.asOf,data=structuredClone(base),mode='overview',planId=1,chartKey='allocated',filter='',stageFilter='',page=1,ledgerOpen=false,ready=false,failed='',pending=null,previewFile=null,importPlan=1,importDate=NSDF.localDate(),busy=false;
 const refLink='https://cpb.ddc.moph.go.th/ddc-pic/index.php?doc=126&view=doc-center';
 const refAccept='https://finance.anamai.moph.go.th/web-upload/19xea11d5b0d4cea50a23c6cedbf5e73d8f/202408/m_document/38915/34253/file_download/9a391530627e8df92e0289b4050b38d0.pdf';
 function btn(label,ico,action,cls='',attr=''){return `<button type="button" class="btn ${cls}" data-act="${action}" ${attr}>${icon(ico)}${label}</button>`;}
 function go(label,ico,to,cls=''){return `<a class="btn ${cls}" href="#${to}">${icon(ico)}${label}</a>`;}
 function badge(text,tone='purple'){return `<span class="badge ${tone}">${h(text)}</span>`;}
+function auditText(record){
+ const name=record.updatedBy?'บันทึกโดย '+h(record.updatedBy):record.migratedBy?'ข้อมูลเดิม · ย้ายโดย '+h(record.migratedBy):'ผู้บันทึกเดิมไม่ระบุ';
+ const time=record.recordedAt?new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'}).format(new Date(record.recordedAt)):'';
+ return name+(time?' · '+h(time):'');
+}
 function foot(){return `<footer class="trackerfooter">กองทุนพัฒนาการกีฬาแห่งชาติ · ปีงบประมาณ 2570</footer>`;}
 function title(tag,name,desc,extra=''){return `<div class="pagetitle"><div><span class="overline">${tag}</span><h1>${h(name)}</h1>${desc?`<p class="sub">${desc}</p>`:''}</div>${extra?`<div class="act">${extra}</div>`:''}</div>`;}
 function kpi(label,val,unit,foot,ico,tone,rate=null){
@@ -78,7 +83,7 @@ function render(){
  if(!role){showEntrance();return;}
  data=snapshot(base,events,asOf);pageShell();
  const screens={overview,plan:planView,weekly:weeklyView,import:importView,sources:sourcesView};
- main.innerHTML=`${failed?`<div class="errorbox">${h(failed)} <button class="textbtn" data-act="reload">โหลดข้อมูลใหม่</button></div>`:''}<div class="screen">${screens[mode]()}${foot()}</div>`;
+ main.innerHTML=`${failed?`<div class="errorbox">${h(failed)} <button class="textbtn" data-act="reload">โหลดข้อมูลใหม่</button></div>`:''}<div id="syncnotice" class="hint" role="status" ${failed?'':'hidden'}>${failed?'การนำเข้าจะพร้อมเมื่อเชื่อมต่อฐานข้อมูลกลางได้อีกครั้ง':''}</div><div class="screen">${screens[mode]()}${foot()}</div>`;
  document.title=(mode==='plan'?'แผนงานที่ '+planId:titles[mode])+' | NSDF 2570';
 }
 function setEvents(list,date){events=list;dates=[...new Set([base.asOf,...events.map(e=>e.date)])].sort().reverse();asOf=date&&dates.includes(date)?date:dates[0];}
