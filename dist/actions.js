@@ -45,11 +45,12 @@ function exportDialog(){
 async function downloadReport(id){
  if(!isStaff())return;
  const selected=id==='all'?support(data):data.plans.filter(p=>p.id===Number(id)), prior=dates[dates.indexOf(asOf)+1],old=prior?snapshot(base,events,prior):null;
- const summary=[['รอบรายงาน','แผนงาน','ชื่อแผนงาน','กรอบเดิม (บาท)','กรอบวงเงิน (บาท)','คณะกรรมการอนุมัติแล้ว (บาท)','จัดสรรต่อกรอบ (%)','MOU ลงนาม','MOU อยู่ระหว่างดำเนินการ','MOU พร้อมลงนาม','MOU รวมตามทะเบียน','เบิกจ่ายแล้ว (บาท)','เบิกจ่ายต่อยอดอนุมัติ (%)','วันที่ปรับปรุงแผน','เปลี่ยนแปลงจัดสรรจากรอบก่อน (บาท)','เปลี่ยนแปลง MOU ลงนาม (ฉบับ)','แถวสรุปต้นทาง','ผู้บันทึกล่าสุด']];
+ const summary=[['รอบรายงาน','แผนงาน','ชื่อแผนงาน','กรอบเดิม (บาท)','กรอบวงเงิน (บาท)','คณะกรรมการอนุมัติแล้ว (บาท)','คงเหลือ (%)','MOU ลงนาม','MOU อยู่ระหว่างดำเนินการ','MOU พร้อมลงนาม','MOU รวมตามทะเบียน','เบิกจ่ายแล้ว (บาท)','เบิกจ่ายต่อยอดอนุมัติ (%)','วันที่ปรับปรุงแผน','เปลี่ยนแปลงจัดสรรจากรอบก่อน (บาท)','เปลี่ยนแปลง MOU ลงนาม (ฉบับ)','แถวสรุปต้นทาง','ผู้บันทึกล่าสุด']];
  const sheets=[{name:'สรุปรายสัปดาห์',rows:summary,widths:[22,12,85,24,24,24,22,18,26,21,23,25,30,22,40,35,22,32]}];
  for(const p of selected){
   const priorPlan=old?.plans.find(x=>x.id===p.id);
-  summary.push([dateTH(asOf),p.id,p.name,p.originalBudget,p.budget,p.allocated,pct(p.allocated,p.budget),p.mouSigned,p.mouPending,p.mouReady,p.mouTotal,p.paid,pct(p.paid,p.allocated),dateTH(p.reportDate||base.asOf),old?p.allocated-priorPlan.allocated:null,old&&p.mouSigned!=null&&priorPlan.mouSigned!=null?p.mouSigned-priorPlan.mouSigned:null,p.sourceRow,p.updatedBy|| (p.migratedBy?'ย้ายโดย '+p.migratedBy:'ไม่ระบุ')]);
+  const remaining=p.budget==null||p.allocated==null?null:p.budget-p.allocated;
+  summary.push([dateTH(asOf),p.id,p.name,p.originalBudget,p.budget,p.allocated,pct(remaining,p.budget),p.mouSigned,p.mouPending,p.mouReady,p.mouTotal,p.paid,pct(p.paid,p.allocated),dateTH(p.reportDate||base.asOf),old?p.allocated-priorPlan.allocated:null,old&&p.mouSigned!=null&&priorPlan.mouSigned!=null?p.mouSigned-priorPlan.mouSigned:null,p.sourceRow,p.updatedBy|| (p.migratedBy?'ย้ายโดย '+p.migratedBy:'ไม่ระบุ')]);
   const proc=p.id===9,source=base.sources[proc?'procurement':'plans'],cols=columns(p.id),fields=['กรอบรายการ (บาท)',...cols.slice(2).map(c=>c[0])];
   const detail=items(data,p.id).map(r=>[r.id,r.name,r.budget,...cols.slice(2).map(c=>c[1]==='contractDate'?r.contractDate||r.contractDateRaw:r[c[1]]),pct(r.paid,r.allocated),dateTH(r.reportDate||base.asOf),source.sheet,r.sourceRow,r.updatedFrom||source.file,r.updatedBy|| (r.migratedBy?'ย้ายโดย '+r.migratedBy:'ไม่ระบุ')]);
   sheets.push({name:proc?'จัดซื้อจัดจ้างแผน 9':'รายการแผน '+p.id,rows:[['รหัสรายการ','รายการ',...fields,'เบิกจ่ายต่อยอดอนุมัติ (%)','ข้อมูล ณ วันที่','ชีตต้นทาง','แถวต้นทาง','แหล่งอัปเดตล่าสุด','ผู้บันทึกล่าสุด'],...detail],widths:[16,85,23,...cols.slice(2).map(c=>['officer','status','note','evidence'].includes(c[1])?65:26),30,20,21,14,40,32]});
